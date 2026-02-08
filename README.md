@@ -1,4 +1,8 @@
 # qlab
+<p align="center">
+  <img src="assets/cover.png" width="900" />
+</p>
+
 
 A Python-based quantitative research platform for US equities. Designed for systematic alpha research, portfolio construction, backtesting, and stock selection using real market data.
 
