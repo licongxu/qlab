@@ -18,6 +18,7 @@ from qlab.portfolio import (
     equal_weight_long_short,
     normalize_weights,
     apply_position_limits,
+    proportional_weights,
 )
 from qlab.risk import (
     performance_summary,
@@ -140,13 +141,21 @@ class BacktestRunner:
                 combined = zscore(combined.dropna())
 
             # Step 3: Portfolio construction (70%)
-            weights = equal_weight_long_short(
-                combined, long_pct=req.long_pct, short_pct=req.short_pct
-            )
-            weights = normalize_weights(weights, gross_exposure=2.0, net_exposure=0.0)
-            weights = apply_position_limits(
-                weights, max_weight=req.max_position, min_weight=-req.max_position
-            )
+            if req.long_only:
+                # Long-only: proportional to signal (clip negatives), like stock picker
+                weights = proportional_weights(combined, long_only=True)
+                weights = apply_position_limits(weights, max_weight=req.max_position, min_weight=0.0)
+                # Renormalize to sum to 1
+                weights = weights / weights.groupby(level="date").transform("sum")
+                weights = weights.fillna(0)
+            else:
+                weights = equal_weight_long_short(
+                    combined, long_pct=req.long_pct, short_pct=req.short_pct
+                )
+                weights = normalize_weights(weights, gross_exposure=2.0, net_exposure=0.0)
+                weights = apply_position_limits(
+                    weights, max_weight=req.max_position, min_weight=-req.max_position
+                )
             self._notify_progress(run_id, 0.7)
 
             # Step 4: Run backtest (90%)

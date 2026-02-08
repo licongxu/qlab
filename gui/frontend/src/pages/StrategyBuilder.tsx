@@ -38,6 +38,7 @@ export function StrategyBuilder({ onComplete }: Props) {
   const [startDate, setStartDate] = useState("2020-01-01");
   const [endDate, setEndDate] = useState("2024-12-31");
   const [alphaRows, setAlphaRows] = useState<AlphaRow[]>([{ name: "momentum", weight: 1, params: {} }]);
+  const [longOnly, setLongOnly] = useState(true);
   const [longPct, setLongPct] = useState(0.2);
   const [shortPct, setShortPct] = useState(0.2);
   const [rebalFreq, setRebalFreq] = useState<"daily" | "weekly" | "monthly">("monthly");
@@ -99,7 +100,7 @@ export function StrategyBuilder({ onComplete }: Props) {
       name: strategyName, tickers,
       start_date: startDate, end_date: endDate,
       alphas: alphaRows.map((r): AlphaConfig => ({ name: r.name, weight: r.weight, params: r.params })),
-      long_pct: longPct, short_pct: shortPct,
+      long_only: longOnly, long_pct: longPct, short_pct: longOnly ? 0 : shortPct,
       rebalance_freq: rebalFreq, commission_bps: commBps, slippage_bps: slipBps, max_position: maxPos,
     };
 
@@ -203,8 +204,15 @@ export function StrategyBuilder({ onComplete }: Props) {
             <div className="w-1 h-4 rounded-full" style={{ background: "var(--success)" }} /> Portfolio & Execution
           </div>
           <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="col-span-3 flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer" style={{ color: "var(--fg)" }}>
+                <input type="checkbox" checked={longOnly} onChange={(e) => { setLongOnly(e.target.checked); if (e.target.checked) setShortPct(0); }} />
+                <span style={{ fontSize: 13 }}>Long-only</span>
+              </label>
+              <span style={{ fontSize: 11, color: "var(--fg-muted)" }}>Recommended: long-only in bull markets</span>
+            </div>
             <div><div style={LABEL}>Long %</div><input type="number" value={longPct} min={0.05} max={0.5} step={0.05} onChange={(e) => setLongPct(parseFloat(e.target.value))} style={INPUT} /></div>
-            <div><div style={LABEL}>Short %</div><input type="number" value={shortPct} min={0.05} max={0.5} step={0.05} onChange={(e) => setShortPct(parseFloat(e.target.value))} style={INPUT} /></div>
+            <div><div style={LABEL}>Short %</div><input type="number" value={shortPct} min={0} max={0.5} step={0.05} onChange={(e) => setShortPct(parseFloat(e.target.value))} style={{ ...INPUT, opacity: longOnly ? 0.5 }} disabled={longOnly} /></div>
             <div><div style={LABEL}>Max Position</div><input type="number" value={maxPos} min={0.01} max={1} step={0.01} onChange={(e) => setMaxPos(parseFloat(e.target.value))} style={INPUT} /></div>
           </div>
           <div className="grid grid-cols-3 gap-4">

@@ -37,8 +37,9 @@ class BacktestRequest(BaseModel):
     start_date: date
     end_date: date
     alphas: list[AlphaConfig] = Field(..., min_length=1)
+    long_only: bool = Field(True, description="If True, long-only portfolio; if False, long-short")
     long_pct: float = Field(0.2, gt=0, le=0.5)
-    short_pct: float = Field(0.2, gt=0, le=0.5)
+    short_pct: float = Field(0.2, ge=0, le=0.5)
     rebalance_freq: RebalanceFreq = RebalanceFreq.monthly
     commission_bps: float = Field(5.0, ge=0)
     slippage_bps: float = Field(5.0, ge=0)

@@ -10,6 +10,7 @@ export interface BacktestRequest {
   start_date: string;
   end_date: string;
   alphas: AlphaConfig[];
+  long_only?: boolean;
   long_pct: number;
   short_pct: number;
   rebalance_freq: "daily" | "weekly" | "monthly";
