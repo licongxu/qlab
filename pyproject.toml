@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qlab"
+version = "0.1.0"
+description = "Quantitative equity strategy research library"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+yfinance = ["yfinance>=0.2.18"]
+tushare = ["tushare>=1.2.89"]
+stats = ["statsmodels>=0.14"]
+plot = ["matplotlib>=3.7"]
+perf = ["numba>=0.57"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+all = ["qlab[yfinance,tushare,stats,plot,perf,dev]"]
+
+[tool.setuptools.packages.find]
+include = ["qlab*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
