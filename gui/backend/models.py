@@ -5,7 +5,7 @@ import enum
 from datetime import date, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Enums ──────────────────────────────────────────────────────────────
@@ -43,6 +43,13 @@ class BacktestRequest(BaseModel):
     commission_bps: float = Field(5.0, ge=0)
     slippage_bps: float = Field(5.0, ge=0)
     max_position: float = Field(0.10, gt=0, le=1.0)
+
+    @field_validator("tickers", mode="before")
+    @classmethod
+    def normalize_tickers(cls, v: Any) -> list[str]:
+        from qlab.data.ticker_utils import parse_tickers
+
+        return parse_tickers(v)
 
 
 # ── Response models ────────────────────────────────────────────────────

@@ -2,9 +2,19 @@
 
 Every public function in the library calls these at entry points to produce
 clear, early error messages rather than cryptic pandas/numpy exceptions downstream.
+
+Data sources
+------------
+The default provider :class:`~qlab.data.yfinance_provider.YFinanceProvider` uses
+Yahoo Finance (unofficial API, daily bars).  Prices are auto-adjusted for splits
+and dividends when ``auto_adjust=True`` (default), meaning OHLC are already
+adjusted and ``adj_close == close``.  Wrap with
+:class:`~qlab.data.cache.ParquetCache` for reproducibility.
 """
 
 from __future__ import annotations
+
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -87,3 +97,72 @@ def validate_weights(weights: pd.Series) -> None:
         raise QlabValidationError(
             "weights contain non-finite per-date absolute sums."
         )
+
+
+def validate_market_data(
+    prices: pd.DataFrame,
+    max_missing_rate: float = 0.05,
+) -> dict:
+    """Validate market data integrity for the real-data pipeline.
+
+    Checks
+    ------
+    - MultiIndex (date, ticker) structure
+    - Monotonic datetime index per ticker, no duplicate rows
+    - Positive close prices, high >= low
+    - Non-negative volume
+    - Per-ticker missing-rate below *max_missing_rate*
+
+    Returns a dict ``{"valid": bool, "global_issues": [...], "ticker_issues": {...}}``.
+    Emits :mod:`warnings` for each problem found.
+    """
+    _check_multiindex(prices, "prices")
+
+    global_issues: list[str] = []
+    ticker_issues: dict[str, list[str]] = {}
+
+    # Duplicate index entries
+    if prices.index.duplicated().any():
+        n_dup = int(prices.index.duplicated().sum())
+        msg = f"Found {n_dup} duplicate index entries"
+        global_issues.append(msg)
+        warnings.warn(f"Data integrity: {msg}")
+
+    tickers = prices.index.get_level_values("ticker").unique()
+    for t in tickers:
+        t_data = prices.xs(t, level="ticker")
+        t_issues: list[str] = []
+
+        if not t_data.index.is_monotonic_increasing:
+            t_issues.append("non-monotonic date index")
+
+        if "close" in t_data.columns:
+            neg = int((t_data["close"] <= 0).sum())
+            if neg > 0:
+                t_issues.append(f"{neg} non-positive close prices")
+            missing = float(t_data["close"].isna().mean())
+            if missing > max_missing_rate:
+                t_issues.append(
+                    f"close missing rate {missing:.1%} exceeds {max_missing_rate:.1%}"
+                )
+
+        if {"high", "low"} <= set(t_data.columns):
+            bad = int((t_data["high"] < t_data["low"]).sum())
+            if bad > 0:
+                t_issues.append(f"{bad} rows where high < low")
+
+        if "volume" in t_data.columns:
+            neg_vol = int((t_data["volume"] < 0).sum())
+            if neg_vol > 0:
+                t_issues.append(f"{neg_vol} negative volume entries")
+
+        if t_issues:
+            ticker_issues[t] = t_issues
+            for issue in t_issues:
+                warnings.warn(f"Data integrity [{t}]: {issue}")
+
+    return {
+        "valid": len(global_issues) == 0 and len(ticker_issues) == 0,
+        "global_issues": global_issues,
+        "ticker_issues": ticker_issues,
+    }

@@ -6,10 +6,12 @@ from qlab.utils.validation import (
     validate_prices,
     validate_weights,
     validate_signal,
+    validate_market_data,
 )
 
 __all__ = [
     "trading_days", "rebalance_dates", "is_month_end", "is_week_end",
     "align_frames", "stack_prices", "unstack_to_wide",
     "validate_prices", "validate_weights", "validate_signal",
+    "validate_market_data",
 ]

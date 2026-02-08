@@ -41,7 +41,9 @@ class ParquetCache(MarketDataProvider):
         start: str | pd.Timestamp,
         end: str | pd.Timestamp,
     ) -> str:
-        raw = f"{sorted(tickers)}|{start}|{end}"
+        # Canonical form: sorted uppercase tickers for consistent cache hits
+        canonical = sorted(t.strip().upper() for t in tickers)
+        raw = f"{canonical}|{start}|{end}"
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def _cache_path(self, key: str) -> Path:

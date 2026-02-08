@@ -68,7 +68,24 @@ export function StrategyBuilder({ onComplete }: Props) {
   };
 
   const getTickers = (): string[] => {
-    if (customTickers.trim()) return customTickers.split(/[,\s]+/).filter(Boolean).map((t) => t.toUpperCase());
+    if (customTickers.trim()) {
+      let input = customTickers.trim();
+      // Handle stringified list formats: "['AAPL','MSFT']" or '["AAPL","MSFT"]'
+      if (input.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(input.replace(/'/g, '"'));
+          if (Array.isArray(parsed)) input = parsed.join(",");
+        } catch {
+          input = input.replace(/[\[\]'"]/g, "");
+        }
+      }
+      const tickerRe = /^[A-Z0-9.\-]+$/;
+      return [...new Set(
+        input.split(/[,\s]+/)
+          .map((t) => t.trim().replace(/^['"]|['"]$/g, "").trim().toUpperCase())
+          .filter((t) => t.length > 0 && tickerRe.test(t))
+      )];
+    }
     return universes.find((u) => u.name === selectedUniverse)?.tickers ?? [];
   };
 

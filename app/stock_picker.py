@@ -53,7 +53,12 @@ class StockPicker:
 
         # 3. Apply filters
         filtered_tickers, filter_log = self._apply_filters(close, volume, prices)
-        print(f"  After filters: {len(filtered_tickers)} tickers ({len(tickers) - len(filtered_tickers)} removed)")
+        removed = set(tickers) - set(filtered_tickers)
+        print(f"  After filters: {len(filtered_tickers)} tickers ({len(removed)} removed)")
+        if removed:
+            for entry in filter_log:
+                if entry["ticker"] in removed:
+                    print(f"    REMOVED: {entry['ticker']} — {entry['filter']} (value={entry['value']})")
 
         # 4. Compute alpha signals
         signals, signal_details = self._compute_signals(close, filtered_tickers)

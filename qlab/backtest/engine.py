@@ -106,18 +106,12 @@ def run_backtest(
         active_signal_dates = signal_dates
 
     # --- Build the target weight schedule (forward-fill between rebalances) ---
-    target_w = pd.DataFrame(0.0, index=all_dates, columns=tickers)
+    # Start with NaN so that ffill only propagates from actual signal dates,
+    # preserving legitimate zero weights on signal dates.
+    target_w = pd.DataFrame(np.nan, index=all_dates, columns=tickers)
     for d in active_signal_dates:
         target_w.loc[d] = weight_wide.loc[d]
-    # Forward fill targets: hold until next rebalance
-    target_w = target_w.replace(0.0, np.nan)
-    # Mark actual rebalance rows, then ffill
-    mask = pd.Series(False, index=all_dates)
-    mask[active_signal_dates] = True
-    for col in target_w.columns:
-        # Only ffill from actual signal dates
-        target_w[col] = target_w[col].ffill()
-    target_w = target_w.fillna(0.0)
+    target_w = target_w.ffill().fillna(0.0)
 
     # --- Apply signal lag ---
     if config.signal_lag > 0:
@@ -163,8 +157,12 @@ def run_backtest(
         held_w.iloc[i] = current_w
 
         # Compute return for this day
+        is_rebalance = trade_turnover > 1e-10
         if i == 0:
             day_ret = 0.0
+        elif is_rebalance and config.execution_price == "open":
+            # On rebalance day with open execution: earn open-to-close
+            day_ret = (current_w * open_to_close.iloc[i]).sum()
         else:
             day_ret = (current_w * asset_returns.iloc[i]).sum()
 
@@ -182,6 +180,20 @@ def run_backtest(
             prev_w = current_w
 
     port_ret_net = port_ret_gross - cost_s
+
+    # --- Trim to first execution date ---
+    # Remove the leading flat period where no positions are held.
+    has_position = held_w.abs().sum(axis=1) > 1e-10
+    if has_position.any():
+        first_exec = has_position.idxmax()
+        # Include one day before for the initial equity = 1.0 baseline
+        loc = all_dates.get_loc(first_exec)
+        trim_start = all_dates[max(0, loc - 1)]
+        port_ret_net = port_ret_net.loc[trim_start:]
+        port_ret_gross = port_ret_gross.loc[trim_start:]
+        held_w = held_w.loc[trim_start:]
+        turnover_s = turnover_s.loc[trim_start:]
+        cost_s = cost_s.loc[trim_start:]
 
     return BacktestResult(
         portfolio_returns=port_ret_net,

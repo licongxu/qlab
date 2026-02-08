@@ -3,6 +3,7 @@
 from qlab.data.base import MarketDataProvider
 from qlab.data.csv_provider import CsvProvider
 from qlab.data.cache import ParquetCache
+from qlab.data.ticker_utils import parse_tickers, normalize_ticker, validate_tickers
 
 __all__ = [
     "MarketDataProvider",
@@ -10,6 +11,9 @@ __all__ = [
     "ParquetCache",
     "YFinanceProvider",
     "TushareProvider",
+    "parse_tickers",
+    "normalize_ticker",
+    "validate_tickers",
 ]
 
 
