@@ -152,10 +152,11 @@ sig_boll = bollinger_signal(close, window=20, num_std=2.0)
 
 # Cross-sectional snapshot comparison
 snap_date = sig_zscore.dropna().index.get_level_values("date").unique()[200]
+_snap_zscore = lambda s: (s - s.mean()) / s.std()  # simple z-score for single cross-section
 snap_data = pd.DataFrame({
-    "Z-score": zscore(sig_zscore.loc[snap_date]),
-    "RSI": zscore(sig_rsi.loc[snap_date]),
-    "Bollinger": zscore(sig_boll.loc[snap_date]),
+    "Z-score": _snap_zscore(sig_zscore.loc[snap_date]),
+    "RSI": _snap_zscore(sig_rsi.loc[snap_date]),
+    "Bollinger": _snap_zscore(sig_boll.loc[snap_date]),
 })
 
 fig, ax = plt.subplots(figsize=(12, 6))

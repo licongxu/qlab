@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0a0e17;
+  --bg-secondary: #0f1420;
+  --bg-tertiary: #161c2e;
+  --bg-elevated: #1a2035;
+  --fg: #e8ecf4;
+  --fg-secondary: #8892a8;
+  --fg-muted: #4a5568;
+  --border: #1e2a42;
+  --border-bright: #2a3a5c;
+  --accent: #00d4aa;
+  --accent-hover: #00f0c0;
+  --accent-dim: rgba(0, 212, 170, 0.12);
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --success: #00d4aa;
+  --danger: #ff4757;
+  --warning: #ffa502;
+  --card: #111827;
+  --card-hover: #1a2035;
+  --gradient-start: #00d4aa;
+  --gradient-end: #3b82f6;
+  --glow: 0 0 20px rgba(0, 212, 170, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 212, 170, 0.3);
+  color: #fff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+/* Recharts overrides */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--border);
+}
+.recharts-text { fill: var(--fg-muted) !important; }
+
+/* Glow effects */
+.glow-card {
+  box-shadow: 0 0 0 1px var(--border), var(--glow);
+  transition: box-shadow 0.3s ease;
+}
+.glow-card:hover {
+  box-shadow: 0 0 0 1px var(--border-bright), 0 0 30px rgba(0, 212, 170, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 1px var(--border), 0 0 15px rgba(0, 212, 170, 0.1); }
+  50% { box-shadow: 0 0 0 1px var(--accent), 0 0 25px rgba(0, 212, 170, 0.25); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Grid pattern background */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Smooth transitions */
+input, select, button, div {
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}

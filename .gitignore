@@ -28,5 +28,14 @@ Thumbs.db
 # Data cache
 .qlab_cache/
 
+# Run outputs
+runs/
+
+# Node modules
+node_modules/
+
+# Frontend build
+gui/frontend/dist/
+
 # Environment
 .env

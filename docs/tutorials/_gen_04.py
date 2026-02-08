@@ -277,6 +277,7 @@ ic_weights_shrunk = shrinkage * equal_w + (1 - shrinkage) * ic_weights_norm
 
 # Build composite signal date by date
 combo_ic_parts = []
+combo_ic_keys = []
 for d in dates:
     if d not in ic_weights_shrunk.index:
         continue
@@ -286,8 +287,9 @@ for d in dates:
         if not sig_d.empty:
             combined = (sig_d * w.values).sum(axis=1)
             combo_ic_parts.append(combined)
+            combo_ic_keys.append(d)
 
-combo_ic = pd.concat(combo_ic_parts)
+combo_ic = pd.concat(combo_ic_parts, keys=combo_ic_keys, names=["date", "ticker"])
 combo_ic = zscore(combo_ic.dropna())
 combo_ic.name = "ICWeighted"
 
